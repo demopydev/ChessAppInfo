@@ -106,7 +106,7 @@ class ChessInfoApp(QWidget):
         url = f"https://api.chess.com/pub/player/{username}/stats"
 
         headers = {
-            "User-Agent": "MyChessApp (robfertoyan)"
+            "User-Agent": "MyChessApp (fla2021)"
         }
 
         response = requests.get(url, headers=headers)

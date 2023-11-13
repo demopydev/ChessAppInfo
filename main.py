@@ -4,10 +4,12 @@ from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve
 import requests
 import random
 
+
 class ResultDialog(QDialog):
     """
     Dialog to display the result.
     """
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle('Result')
@@ -39,6 +41,7 @@ class ChessInfoApp(QWidget):
     """
     Main application widget.
     """
+
     def __init__(self):
         super().__init__()
 
@@ -113,10 +116,51 @@ class ChessInfoApp(QWidget):
 
         if response.status_code == 200:
             data = response.json()
-            rating = data['chess_blitz']['last']['rating']
-            self.show_result(f"The rating for {username} is {rating}")
+            bullet_rating = data['chess_bullet']['last']['rating']
+            blitz_rating = data['chess_blitz']['last']['rating']
+            rapid_rating = data['chess_rapid']['last']['rating']
+            bullet_wins = data['chess_bullet']['record']['win']
+            bullet_losses = data['chess_bullet']['record']['loss']
+            bullet_draws = data['chess_bullet']['record']['draw']
+            blitz_wins = data['chess_blitz']['record']['win']
+            blitz_losses = data['chess_blitz']['record']['loss']
+            blitz_draws = data['chess_blitz']['record']['draw']
+            rapid_wins = data['chess_rapid']['record']['win']
+            rapid_losses = data['chess_rapid']['record']['loss']
+            rapid_draws = data['chess_rapid']['record']['draw']
+
+            if self.is_cheating(bullet_rating, blitz_rating, rapid_rating,
+                                bullet_wins, bullet_losses, bullet_draws,
+                                blitz_wins, blitz_losses, blitz_draws,
+                                rapid_wins, rapid_losses, rapid_draws):
+                self.show_result(f"Warning: Potential cheating detected for {username}!")
+            else:
+                self.show_result(f"The {username} is not cheater!")
         else:
             self.show_error_message(f"Error {response.status_code}")
+
+    def is_cheating(self, bullet_rating, blitz_rating, rapid_rating,
+                    bullet_wins, bullet_losses, bullet_draws,
+                    blitz_wins, blitz_losses, blitz_draws,
+                    rapid_wins, rapid_losses, rapid_draws):
+
+        rating_difference_threshold = 300  # Adjust this value based on your analysis
+        games_played_threshold = 50  # Adjust this value based on your analysis
+
+        rating_difference_bullet_blitz = abs(blitz_rating - bullet_rating)
+        rating_difference_blitz_rapid = abs(rapid_rating - blitz_rating)
+
+        games_played_bullet = bullet_wins + bullet_losses + bullet_draws
+        games_played_blitz = blitz_wins + blitz_losses + blitz_draws
+        games_played_rapid = rapid_wins + rapid_losses + rapid_draws
+
+        return (
+                rating_difference_bullet_blitz > rating_difference_threshold and
+                rating_difference_blitz_rapid > rating_difference_threshold and
+                games_played_bullet > games_played_threshold and
+                games_played_blitz > games_played_threshold and
+                games_played_rapid > games_played_threshold
+        )
 
     def suggest_tactic(self):
         """
